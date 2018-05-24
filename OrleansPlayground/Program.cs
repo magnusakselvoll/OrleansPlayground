@@ -1,5 +1,8 @@
 using System;
-
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using GrainInterfaces;
 using Orleans;
 using Orleans.Runtime.Configuration;
 using Orleans.Runtime.Host;
@@ -28,10 +31,20 @@ namespace OrleansPlayground
 
             Console.WriteLine("Client connected.");
 
-            //
-            // This is the place for your test code.
-            //
+            int numberOfGrains = 200;
 
+            var tasks = new Task[numberOfGrains];
+            for (int i = 0; i < numberOfGrains; i++)
+            {
+                var friend = client.GetGrain<IGrain1>(i);
+                Task<string> task = friend.SayHello();
+                var taskId = i;
+                task.ContinueWith(helloTask => { Console.WriteLine($"{taskId}: {helloTask.Result}"); });
+                tasks[i] = task;
+            }
+
+            Task.WaitAll(tasks);
+            
             Console.WriteLine("\nPress Enter to terminate...");
             Console.ReadLine();
 
